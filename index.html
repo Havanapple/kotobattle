@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kotobattle</title>
+<style>
+:root{--bg:#f6f4ef;--surface:#fff;--text:#1d1d1f;--muted:#6b6b70;--line:#d9d5cb;--tile:#e1ddd2;--red:#d93a3a;--blue:#2a62d6;--on:#fff;--accent:#1d1d1f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16161a;--surface:#222228;--text:#f2f2f4;--muted:#9a9aa3;--line:#3a3a42;--tile:#2c2c33;--red:#e5545a;--blue:#4b82ef;--accent:#f2f2f4}}
+:root[data-theme="dark"]{--bg:#16161a;--surface:#222228;--text:#f2f2f4;--muted:#9a9aa3;--line:#3a3a42;--tile:#2c2c33;--red:#e5545a;--blue:#4b82ef;--accent:#f2f2f4}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;padding:16px}
+.stage{position:relative;width:min(100%,calc(100vh - 32px));margin:0 auto}
+.panel{position:absolute;left:0;top:0;width:48%;display:flex;flex-direction:column;gap:14px;align-items:flex-start;z-index:2}
+h1{font-size:26px;margin:0;letter-spacing:-.01em}
+.score{display:flex;gap:10px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:999px;color:var(--on);font-weight:700;font-size:15px}
+.chip.red{background:var(--red)}.chip.blue{background:var(--blue)}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--text);padding:7px 14px;font:inherit;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--bg)}
+.link{background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
+.legend{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.legend svg{width:34px;height:8px;flex:none}
+.hint{font-size:13px;color:var(--muted);max-width:340px;margin:0}
+#map{display:block;width:100%;height:auto;user-select:none}
+.xl{stroke:var(--text);stroke-width:4;stroke-dasharray:6 5;stroke-linecap:round;opacity:.75;fill:none}
+.pf{cursor:pointer;--f:var(--tile);--tx:var(--text)}
+.pf.red{--f:var(--red);--tx:var(--on)}.pf.blue{--f:var(--blue);--tx:var(--on)}
+.pf .c{fill:var(--f);stroke:var(--f);stroke-width:1}
+.pf .bd{fill:none;stroke:var(--bg);stroke-width:3;stroke-linecap:square;pointer-events:none}
+.pf:hover .c{opacity:.82}
+.pf text{fill:var(--tx);text-anchor:middle;dominant-baseline:central;pointer-events:none;font-family:inherit}
+.pf .v{font-weight:800}
+.pf .nm{opacity:.9}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.ov.show{display:flex}
+.card{background:var(--surface);border-radius:14px;padding:20px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.card h2{margin:0 0 2px;font-size:20px}
+.card .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.row{display:flex;gap:10px;margin-bottom:12px}
+.pl{flex:1;padding:12px;border-radius:10px;border:3px solid transparent;color:var(--on);font:inherit;font-weight:700;cursor:pointer;opacity:.55}
+.pl.red{background:var(--red)}.pl.blue{background:var(--blue)}
+.pl.sel{opacity:1;border-color:var(--text)}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.f{flex:1}
+input{width:100%;font:inherit;font-size:20px;font-weight:700;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);text-transform:uppercase;text-align:center}
+input:disabled{opacity:.6}
+.msg{min-height:18px;font-size:13px;color:var(--red);margin-bottom:8px}
+.act{display:flex;gap:8px}
+.act button{flex:1;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.count{font-size:13px;color:var(--muted);min-height:18px;margin:6px 0 4px;text-align:center}
+input{letter-spacing:.06em}
+.act .go:disabled{opacity:.4;cursor:not-allowed}
+.act .go{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:700}
+.card.wide{max-width:460px;max-height:90vh;overflow:auto}
+.sec{margin:0 0 18px}
+.sec h3{font-size:12px;margin:0 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+textarea{width:100%;font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);resize:vertical;text-transform:uppercase}
+.brow{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px;color:var(--muted)}
+.brow input{width:80px;font-size:16px;padding:6px 8px}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.link.danger{color:var(--red);border-color:var(--red)}
+.turn{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:250px}
+.tcap{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.trow{display:flex;align-items:center;gap:14px;margin:6px 0}
+.big{font-size:56px;font-weight:800;line-height:1;width:64px;text-align:center}
+.tside{display:flex;flex-direction:column;gap:6px;min-width:130px}
+.tm{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;min-height:26px}
+.turn.up .tm{color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.bar{height:6px;background:var(--tile);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+.turn.up .bar i{background:var(--red)}
+.tnote{font-size:12px;color:var(--muted)}
+.rq{font-size:14px;font-weight:600;margin:0 0 10px}
+.lg{display:flex;flex-wrap:wrap;gap:4px}
+.lg button{width:32px;height:32px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-weight:700;cursor:pointer;padding:0}
+.lg button.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.lg.bl button.on{background:var(--red);color:var(--on);border-color:var(--red)}
+.hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ib{width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;cursor:pointer}
+.ib:hover{border-color:var(--text)}
+.ib svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#fs .co{display:none}#fs.on .ex{display:none}#fs.on .co{display:block}
+.info{position:absolute;right:0;bottom:0;z-index:4}
+.info .ib{width:32px;height:32px}
+.tip{position:absolute;right:0;bottom:40px;width:min(330px,80vw);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.22);opacity:0;visibility:hidden;transition:opacity .15s}
+.info:hover .tip,.info:focus-within .tip{opacity:1;visibility:visible}
+.tip .legend{margin-bottom:8px}
+.tip .hint{max-width:none}
+.rollbox{display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 14px;margin:0 0 10px}
+.rollbox.up .tm{color:var(--red);animation:pulse 1s infinite}
+.rollbox.up .bar i{background:var(--red)}
+.sw{pointer-events:none}
+.sw .c{animation:swp .26s ease-out forwards}
+.sw .swt{animation:swp .3s ease-out forwards}
+.sw.fl .c{fill:var(--on);stroke:var(--on);opacity:.65;animation-duration:.55s}
+@keyframes swp{to{opacity:0}}
+.banner{position:fixed;top:16px;left:50%;transform:translate(-50%,-170%);opacity:0;z-index:30;padding:12px 28px;border-radius:14px;color:var(--on);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3);pointer-events:none;min-width:300px;background:var(--accent)}
+.banner.red{background:var(--red)}.banner.blue{background:var(--blue)}
+.banner.show{animation:bn 3.4s ease both}
+.bh{font-size:20px;font-weight:800}
+.bw{font-size:16px;margin-top:2px;letter-spacing:.02em}
+@keyframes bn{0%{transform:translate(-50%,-170%);opacity:0}10%{transform:translate(-50%,0);opacity:1}86%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,-170%);opacity:0}}
+@keyframes bf{0%{opacity:0}10%{opacity:1}86%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.banner.show{animation-name:bf;transform:translate(-50%,0)}}
+.tb{padding:8px 12px;border-radius:10px;color:var(--on);font-weight:700;margin:0 0 12px}
+.tb.red{background:var(--red)}.tb.blue{background:var(--blue)}
+.tbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tbtns .link{padding:5px 10px;font-size:13px}
+.link:disabled{opacity:.45;cursor:not-allowed}
+.turn.red{box-shadow:inset 0 4px 0 var(--red)}.turn.blue{box-shadow:inset 0 4px 0 var(--blue)}
+.chip{transition:opacity .2s}.chip.dim{opacity:.5}
+.chip.act{box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--text)}
+.turn.flip{animation:flip .4s ease}
+@keyframes flip{0%{transform:scale(1.05)}100%{transform:scale(1)}}
+.gr{padding:8px 12px;border-radius:8px;color:var(--on);margin:6px 0;font-size:15px}
+.gr.red{background:var(--red)}.gr.blue{background:var(--blue)}
+.topr{position:fixed;top:12px;right:12px;display:flex;gap:8px;z-index:25}
+.tpill{padding:5px 12px;border-radius:999px;color:var(--text);font-weight:600;font-size:14px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.die{width:16px;height:16px;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:2}
+.die circle{fill:currentColor;stroke:none}
+.rr{white-space:nowrap}
+.score{flex-wrap:nowrap;width:max-content}
+.chip{white-space:nowrap;padding:7px 12px;font-size:14px}
+.iacts{display:flex;gap:6px;align-items:center;margin-left:2px}
+.iacts .ib{width:32px;height:32px}
+.ib{position:relative}
+.ib:disabled{opacity:.4;cursor:not-allowed}
+.ib:disabled:hover{border-color:var(--line)}
+.ib.armed{background:var(--red);color:var(--on);border-color:var(--red)}
+.ib.armed::after{content:"Tap again";position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;font-size:11px;white-space:nowrap;background:var(--text);color:var(--bg);padding:2px 7px;border-radius:4px;pointer-events:none;z-index:5}
+</style>
+</head>
+<body>
+<div class="topr">
+  <button class="ib" id="setbtn" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  <button class="ib" id="fs" title="Full screen" aria-label="Full screen"><svg class="ex" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="co" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
+</div>
+<div class="stage">
+  <div class="panel">
+    <div class="hd">
+      <h1>Kotobattle</h1>
+      <span class="tpill" id="tpill"></span>
+    </div>
+    <div class="score"><span class="chip red" id="sr"></span><span class="chip blue" id="sb"></span>
+      <div class="iacts">
+        <button class="ib" id="pass" title="Pass turn" aria-label="Pass turn"><svg viewBox="0 0 24 24"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg></button>
+        <button class="ib" id="undo" title="Undo last move" aria-label="Undo last move"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+        <button class="ib" id="swap" title="Swap turn" aria-label="Swap turn"><svg viewBox="0 0 24 24"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg></button>
+      </div>
+    </div>
+    <div class="turn" id="turn">
+      <div class="trow" id="trow">
+        <div class="big" id="big">&ndash;</div>
+      </div>
+      <div class="tnote" id="tnote"></div>
+      <div class="tbtns">
+        <button class="link" id="roll">Free choice</button>
+        <button class="link" id="res">Results</button>
+      </div>
+    </div>
+  </div>
+  <div class="info">
+    <button class="ib" id="infobtn" aria-label="How to play" aria-describedby="infotip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg></button>
+    <div class="tip" id="infotip" role="tooltip">
+      <div class="legend"><svg viewBox="0 0 34 8"><line x1="2" y1="4" x2="32" y2="4" class="xl"/></svg>Island crossing</div>
+      <p class="hint">Tap a prefecture and type a word. You can only take a prefecture that touches one you own, or is across a crossing from one. A new area needs a word starting with the current letter (in Random mode a letter is rolled when you open it). To steal, use a word that starts with the area's own letter and scores more points. Each word can only be used once.</p>
+    </div>
+  </div>
+  <svg id="map" viewBox="0 0 972 972" role="img" aria-label="Blocky map of Japan"></svg>
+</div>
+
+<div class="banner" id="banner"><div class="bh" id="bh"></div><div class="bw" id="bw"></div></div>
+
+<div class="ov" id="goov"><div class="card">
+  <h2 id="goh"></h2><div class="sub" id="gos"></div>
+  <div id="gob"></div>
+  <div class="act" style="margin-top:14px"><button id="gov">View board</button><button id="gokeep">Keep playing</button><button class="go" id="gonew">New game</button></div>
+</div></div>
+
+<div class="ov" id="ov"><div class="card">
+  <h2 id="cn"></h2><div class="sub" id="cs"></div>
+  <div class="tb" id="tb"></div>
+  <div class="rollbox" id="rollbox">
+    <div class="big" id="dbig">&ndash;</div>
+    <div class="tside"><div class="tm" id="dtm"></div><div class="bar"><i id="dbar"></i></div><button class="link" id="droll">Re-roll</button></div>
+  </div>
+  <div class="rq" id="rq"></div>
+  <div class="wrapw"><label>Word</label><input id="wi" maxlength="30" autocomplete="off" spellcheck="false" autocapitalize="characters"></div>
+  <div class="count" id="cnt"></div>
+  <div class="msg" id="msg"></div>
+  <div class="act"><button id="clr">Clear</button><button id="dpass">Pass turn</button><button id="cx">Cancel</button><button class="go" id="ok">Save</button></div>
+</div></div>
+
+<div class="ov" id="setov"><div class="card wide">
+  <h2>Settings</h2><div class="sub">Changes apply straight away and are saved on this device.</div>
+  <div class="sec"><h3>Labels</h3>
+    <div class="seg" id="lang"><button data-m="en">English</button><button data-m="jp">日本語</button><button data-m="both">Both</button></div>
+  </div>
+  <div class="sec"><h3>Appearance</h3>
+    <div class="seg" id="theme"><button data-t="auto">Auto</button><button data-t="light">Light</button><button data-t="dark">Dark</button></div>
+  </div>
+  <div class="sec"><h3>Animations</h3>
+    <div class="seg" id="anim"><button data-a="on">On</button><button data-a="off">Off</button></div>
+    <div class="note">The colour sweep and the steal banner. They also switch off automatically if your device is set to reduce motion.</div>
+  </div>
+  <div class="sec"><h3>Game mode</h3>
+    <div class="seg" id="gmode"><button data-g="random">Random letter</button><button data-g="shiri">Shiritori</button></div>
+  </div>
+  <div class="sec" id="rset"><h3>Random letter</h3>
+    <div class="brow"><span>Timer (seconds)</span><input id="tsec" type="number" min="5" max="600" step="5"></div>
+    <div class="note">A letter is rolled each time an unclaimed area is opened, and can be re-rolled in the dialog. The timer is only a cue for the game master. A word can still be entered after it runs out.</div>
+    <div class="note" style="margin-bottom:8px">Letter pool: tap a letter to take it out of the roll, or put it back. Letters that have been used in a word come up less often.</div>
+    <div class="lg" id="pool"></div>
+    <div style="margin-top:8px"><button class="link" id="poolall">Enable all letters</button></div>
+  </div>
+  <div class="sec" id="sset"><h3>Shiritori</h3>
+    <div class="note" style="margin:0 0 8px">Each word must start with the last letter of the previous word. Tap letters to blacklist them: if a word ends in a blacklisted letter, the next word starts with the letter before it (FOX becomes O if X is blacklisted).</div>
+    <div class="lg bl" id="blk"></div>
+  </div>
+  <div class="sec"><h3>Turns</h3>
+    <div class="note" style="margin:0 0 6px">Who goes first</div>
+    <div class="seg" id="first"><button data-f="red">Red</button><button data-f="blue">Blue</button><button data-f="random">Random</button></div>
+    <div class="brow"><span>Re-rolls per player per game</span><input id="rrmax" type="number" min="0" max="99" step="1"></div>
+    <div class="note" style="margin:12px 0 6px">Game ends</div>
+    <div class="seg" id="endm"><button data-e="unlimited">Unlimited</button><button data-e="rounds">Rounds</button><button data-e="board">Full board</button></div>
+    <div class="brow" id="endrw"><span>Number of rounds</span><input id="endr" type="number" min="1" max="99" step="1"></div>
+    <div class="note" style="margin:12px 0 6px">Winner decided by</div>
+    <div class="seg" id="winb"><button data-w="areas">Most areas</button><button data-w="points">Most points</button></div>
+    <div class="note">A round is one turn for each team. A passed turn scores nothing. With Full board, the game ends once every prefecture is taken and the round has finished, so both teams get the same number of turns.</div>
+  </div>
+  <div class="sec"><h3>Bonus words</h3>
+    <textarea id="bw" rows="4" spellcheck="false" placeholder="One word per line, or separated by commas"></textarea>
+    <div class="brow"><span>Bonus</span>
+      <div class="seg" id="btype"><button data-t="add">+ Add</button><button data-t="mul">&times; Multiply</button></div>
+      <input id="bx" type="number" min="1" max="99" step="0.5">
+    </div>
+    <div class="note" id="bnote"></div>
+    <div class="note">The bonus counts as the word's score, so a bonus word has to be beaten on points. Halves are allowed (1.5, 2.5) and scores are rounded up. It applies to words entered from now on.</div>
+  </div>
+  <div class="sec"><h3>Game</h3>
+    <button class="link danger" id="reset">Reset board</button>
+    <button class="link danger" id="endnow">End game now</button>
+  </div>
+  <div class="act"><button class="go" id="setdone">Done</button></div>
+</div></div>
+
+<script>
+const P=[["Hokkaido","北海道",[[41,10,3,1],[42,9,4,1],[44,0,4,1],[44,8,5,1],[44,7,6,1],[44,1,7,1],[44,6,7,1],[44,2,9,1],[44,4,9,1],[44,3,10,1],[44,5,10,1]]],["Aomori","青森",[[41,12,2,1],[41,13,7,2],[45,12,3,1]]],["Akita","秋田",[[39,16,5,5],[40,15,4,1]]],["Iwate","岩手",[[44,15,4,1],[44,16,5,6]]],["Yamagata","山形",[[40,21,4,5]]],["Miyagi","宮城",[[44,22,5,4]]],["Niigata","新潟",[[34,30,2,1],[34,29,5,1],[35,28,4,1],[36,27,3,1],[37,26,2,1],[37,25,3,1],[38,24,2,1]]],["Fukushima","福島",[[39,29,7,1],[39,26,8,3]]],["Gunma","群馬",[[36,30,4,3]]],["Tochigi","栃木",[[40,30,4,3]]],["Ibaraki","茨城",[[43,34,1,1],[43,33,4,1],[44,30,3,3]]],["Ishikawa","石川",[[27,32,2,1],[27,29,3,3],[29,28,3,1],[30,27,3,1],[31,26,2,1]]],["Toyama","富山",[[30,31,3,1],[30,29,4,2]]],["Nagano","長野",[[33,35,2,2],[33,31,3,2],[33,33,4,2]]],["Fukui","福井",[[25,33,4,4]]],["Gifu","岐阜",[[29,32,4,5]]],["Yamanashi","山梨",[[35,35,4,3]]],["Saitama","埼玉",[[37,33,6,2]]],["Tokyo","東京",[[39,35,4,2]]],["Chiba","千葉",[[43,35,4,2],[44,39,2,1],[44,34,3,1],[44,37,3,2]]],["Shimane","島根",[[8,36,7,2],[11,35,4,1]]],["Tottori","鳥取",[[15,35,4,3]]],["Hyogo","兵庫",[[19,36,4,6]]],["Kyoto","京都",[[23,35,2,2],[23,37,3,3]]],["Shiga","滋賀",[[26,37,3,2]]],["Aichi","愛知",[[31,37,3,3]]],["Shizuoka","静岡",[[34,37,1,1],[34,38,5,1],[34,39,6,1],[35,40,4,1],[37,41,3,1]]],["Kanagawa","神奈川",[[39,37,3,2]]],["Yamaguchi","山口",[[7,38,5,4]]],["Hiroshima","広島",[[12,38,4,4]]],["Okayama","岡山",[[16,38,3,3]]],["Osaka","大阪",[[23,40,3,2]]],["Nara","奈良",[[26,39,3,3]]],["Mie","三重",[[28,43,3,1],[28,42,4,1],[29,37,2,3],[29,40,3,2]]],["Nagasaki","長崎",[[3,43,1,3],[3,46,3,3]]],["Saga","佐賀",[[4,43,2,3]]],["Fukuoka","福岡",[[6,43,4,3]]],["Oita","大分",[[10,44,3,2],[11,43,2,1],[11,46,2,1]]],["Ehime","愛媛",[[14,46,2,1],[14,44,3,2],[15,43,2,1]]],["Kagawa","香川",[[17,43,3,2]]],["Tokushima","徳島",[[20,43,3,3]]],["Wakayama","和歌山",[[24,42,4,3],[25,45,3,1]]],["Kumamoto","熊本",[[7,46,4,4]]],["Miyazaki","宮崎",[[11,47,2,1],[11,51,2,1],[11,48,3,3]]],["Kochi","高知",[[15,47,7,1],[16,48,5,1],[16,46,6,1],[17,45,3,1]]],["Kagoshima","鹿児島",[[6,51,5,2],[7,53,3,1],[7,50,4,1]]],["Okinawa","沖縄",[[0,52,4,1],[0,51,5,1],[1,50,4,1]]]];
+const CROSS=[["Aomori","Hokkaido"],["Yamaguchi","Fukuoka"],["Oita","Ehime"],["Hyogo","Tokushima"],["Wakayama","Tokushima"],["Kagoshima","Okinawa"],["Hiroshima","Ehime"]];
+const KEY="japan-word-battle-v1";
+let S={board:{},mode:"both"},sel=-1,player=null;
+try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o.board)S=Object.assign(S,o)}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+S.bonus=Object.assign({text:"",type:"add",x:2},S.bonus||{});
+if(!S.theme)S.theme="auto";
+if(!S.gmode)S.gmode="random";
+if(!S.tsec)S.tsec=60;
+if(!Array.isArray(S.off))S.off=[];
+if(!Array.isArray(S.bl))S.bl=[];
+if(!S.first)S.first="red";
+if(typeof S.rrMax!=="number")S.rrMax=3;
+S.rrUsed=Object.assign({red:0,blue:0},S.rrUsed||{});
+S.passes=Object.assign({red:0,blue:0},S.passes||{});
+S.end=Object.assign({mode:"unlimited",rounds:10},S.end||{});
+if(!S.win)S.win="areas";
+if(!S.turns)S.turns=0;
+if(!S.turn)S.turn=pickFirst();
+if(!Array.isArray(S.hist))S.hist=[];
+if(!S.gen)S.gen={};
+if(!S.use){S.use={};for(const k in S.board){const d=S.board[k];if(d.l&&!d.home)S.use[d.l]=(S.use[d.l]||0)+1}}
+if(!Array.isArray(S.used))S.used=[];
+for(const k in S.board){const w=S.board[k].w;if(w&&!S.used.includes(w))S.used.push(w)}
+
+const U=18,GW=54,GH=54;
+const own=Array.from({length:GH},()=>Array(GW).fill(-1));
+P.forEach((p,i)=>p[2].forEach(([c,r,w,h])=>{for(let y=r;y<r+h;y++)for(let x=c;x<c+w;x++)own[y][x]=i}));
+const at=(x,y)=>(own[y]&&own[y][x]!==undefined)?own[y][x]:-1;
+P.forEach((p,i)=>{
+  const cells=[];own.forEach((row,y)=>row.forEach((o,x)=>{if(o===i)cells.push([x,y])}));
+  p.cells=cells;
+  let d="";
+  cells.forEach(([x,y])=>{
+    const X=x*U,Y=y*U;
+    if(at(x,y-1)!==i)d+="M"+X+" "+Y+"h"+U;
+    if(at(x,y+1)!==i)d+="M"+X+" "+(Y+U)+"h"+U;
+    if(at(x-1,y)!==i)d+="M"+X+" "+Y+"v"+U;
+    if(at(x+1,y)!==i)d+="M"+(X+U)+" "+Y+"v"+U;
+  });
+  const mx=cells.reduce((s,c)=>s+c[0],0)/cells.length,my=cells.reduce((s,c)=>s+c[1],0)/cells.length;
+  let best=cells[0],bd=1e9;
+  cells.forEach(([x,y])=>{const q=(x-mx)**2+(y-my)**2;if(q<bd){bd=q;best=[x,y]}});
+  const [bx,by]=best;let l=bx,r=bx,t=by,b=by;
+  while(at(l-1,by)===i)l--;while(at(r+1,by)===i)r++;
+  while(at(bx,t-1)===i)t--;while(at(bx,b+1)===i)b++;
+  p.g={d,cx:(l+r+1)/2*U,cy:(t+b+1)/2*U,w:(r-l+1)*U,h:(b-t+1)*U};
+});
+const nameIdx={};P.forEach((p,i)=>nameIdx[p[0]]=i);
+const LINES=CROSS.map(([a,b])=>{
+  let best=null,bd=1e9;
+  P[nameIdx[a]].cells.forEach(([x1,y1])=>P[nameIdx[b]].cells.forEach(([x2,y2])=>{
+    const q=(x1-x2)**2+(y1-y2)**2;if(q<bd){bd=q;best=[x1,y1,x2,y2]}}));
+  return '<line class="xl" x1="'+(best[0]+.5)*U+'" y1="'+(best[1]+.5)*U+'" x2="'+(best[2]+.5)*U+'" y2="'+(best[3]+.5)*U+'"/>';
+}).join("");
+
+P.forEach(p=>p.nb=new Set());
+P.forEach((p,i)=>p.cells.forEach(([x,y])=>[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const o=at(x+dx,y+dy);if(o>=0&&o!==i){p.nb.add(o);P[o].nb.add(i)}})));
+CROSS.forEach(([a,b])=>{P[nameIdx[a]].nb.add(nameIdx[b]);P[nameIdx[b]].nb.add(nameIdx[a])});
+const HOME={"Okinawa":"red","Hokkaido":"blue"};
+function ensureHome(){for(const n in HOME)S.board[nameIdx[n]]={p:HOME[n],home:true}}
+const canReach=(i,pl)=>{const d=S.board[i];if(d&&d.p===pl)return true;return [...P[i].nb].some(j=>S.board[j]&&S.board[j].p===pl)};
+const TEAM={red:"Red",blue:"Blue"};
+function parseBonus(t){const ok=[],bad=[];(t||"").split(/[\s,;、]+/).forEach(x=>{if(!x)return;const u=x.toUpperCase();if(/^[A-Z]+$/.test(u)){if(!ok.includes(u))ok.push(u)}else bad.push(x)});return {ok,bad}}
+const bonusSet=()=>new Set(parseBonus(S.bonus.text).ok);
+function scoreOf(w){const B=S.bonus;if(!bonusSet().has(w))return w.length;return Math.ceil(B.type==="mul"?w.length*B.x:w.length+B.x)}
+function applyTheme(){const r=document.documentElement;if(S.theme==="light"||S.theme==="dark")r.setAttribute("data-theme",S.theme);else r.removeAttribute("data-theme")}
+
+const em=s=>[...s].reduce((a,ch)=>a+(ch.charCodeAt(0)>255?1:0.58),0);
+function labelSvg(p,d){
+  const g=p.g;
+  const lines=S.mode==="en"?[p[0]]:S.mode==="jp"?[p[1]]:[p[1],p[0]];
+  const val=d?(d.home?"★":d.l+d.n):"";
+  let ns=Math.min(11,0.9*g.w/Math.max(...lines.map(em)));
+  let vs=val?Math.min(20,0.9*g.w/(em(val)*1.05)):0;
+  let total=(val?vs*1.1:0)+lines.length*ns*1.15;
+  const f=Math.min(1,0.92*g.h/total);
+  ns=Math.max(5,ns*f);vs*=f;
+  total=(val?vs*1.1:0)+lines.length*ns*1.15;
+  let y=g.cy-total/2,txt="";
+  if(val){txt+='<text class="v" x="'+g.cx+'" y="'+(y+vs*0.55)+'" font-size="'+vs.toFixed(1)+'">'+val+'</text>';y+=vs*1.1}
+  lines.forEach(t=>{txt+='<text class="nm" x="'+g.cx+'" y="'+(y+ns*0.575)+'" font-size="'+ns.toFixed(1)+'">'+t+'</text>';y+=ns*1.15});
+  return txt;
+}
+function render(){
+  const tot={red:[0,0],blue:[0,0]};
+  let out=LINES;
+  P.forEach((p,i)=>{
+    const d=S.board[i],g=p.g;
+    const txt=labelSvg(p,d);
+    const rects=p[2].map(([c,r,w,h])=>'<rect class="c" x="'+c*U+'" y="'+r*U+'" width="'+w*U+'" height="'+h*U+'"/>').join("");
+    out+='<g class="pf'+(d?" "+d.p:"")+'" data-i="'+i+'">'+rects+'<path class="bd" d="'+g.d+'"/>'+txt+'</g>';
+    if(d){tot[d.p][0]++;tot[d.p][1]+=d.n||0}
+  });
+  $("map").innerHTML=out;
+  renderTurn();
+  document.querySelectorAll("#lang button").forEach(b=>b.classList.toggle("on",b.dataset.m===S.mode));
+}
+$("map").addEventListener("click",e=>{const g=e.target.closest(".pf");if(g)openDlg(+g.dataset.i)});
+function problem(){
+  const d=S.board[sel],w=$("wi").value.trim().toUpperCase();
+  if(!player)return "Choose a team.";
+  if(S.over)return "The game is over.";
+  if(rolling)return "Rolling\u2026";
+  if(!canReach(sel,player))return TEAM[player]+" needs to own a neighbouring prefecture, or one across a crossing, first.";
+  const ri=reqInfo();
+  if(!d&&S.gmode==="random"&&!ri.l)return "Roll a letter first.";
+  if(!w)return "";
+  if(!/^[A-Z]+$/.test(w))return "Letters A–Z only, no spaces or symbols.";
+  if(!d&&ri.l&&w[0]!==ri.l)return "The word must start with "+ri.l+".";
+  if(d&&w[0]!==d.l)return "To steal this area the word must start with "+d.l+".";
+  if(S.used.includes(w))return "\u201c"+w+"\u201d has already been used. Each word can only be used once.";
+  if(d&&scoreOf(w)<=d.n)return "You need more than "+d.n+" points to take this area (that word scores "+scoreOf(w)+").";
+  return "";
+}
+function refresh(){
+  const rl=rrLeft(S.turn);$("droll").textContent="Re-roll ("+rl+" left)";$("droll").disabled=rl<=0||rolling;
+  const q=reqInfo(),dd=S.board[sel];
+  $("rq").textContent=(dd&&!dd.home)?"Steal: the word must start with "+dd.l+" (this area's letter)":q.l?(S.gmode==="shiri"?"Word must start with "+q.l+" \u00b7 "+q.note:"Word must start with "+q.l):(S.gmode==="shiri"?q.note:"");
+  if(S.gmode==="random"&&poolEmpty&&!(dd&&!dd.home))$("rq").textContent="No letters left in the pool. Turn some on in Settings.";
+  const d=S.board[sel],w=$("wi").value.trim().toUpperCase();
+  const clean=/^[A-Z]+$/.test(w);
+  let ct="";
+  if(w&&clean){const sc=scoreOf(w),B=S.bonus;ct=w.length+" letter"+(w.length===1?"":"s");if(sc!==w.length)ct+=" · bonus word ("+(B.type==="mul"?"\u00d7":"+")+B.x+") = "+sc+" points";else ct+=" = "+sc+" point"+(sc===1?"":"s");if(!d)ct+=" · starts with "+w[0]}
+  $("cnt").textContent=ct;
+  const pr=problem();
+  $("msg").textContent=rolling?"":pr;
+  $("ok").disabled=!!pr||!w;
+}
+function openDlg(i){
+  sel=i;const d=S.board[i],p=P[i];
+  $("cn").textContent=p[1]+" "+p[0];
+  const home=d&&d.home,locked=!!home||S.over;
+  $("cs").textContent=(home?"Home base for "+TEAM[d.p]+". It can't be taken.":d?"Held by "+TEAM[d.p]+" · "+d.l+d.n+" · word: "+(d.w||"(not recorded)")+(d.len&&d.len!==d.n?" ("+d.len+" letters + bonus)":"")+". Beat "+d.n+" points to steal it.":"Unclaimed")+((S.over&&!home)?" The game is over.":"");
+  $("tb").textContent=TEAM[S.turn]+"\u2019s turn \u00b7 Round "+(Math.floor(S.turns/2)+1);
+  $("tb").className="tb "+S.turn;
+  $("tb").style.display=locked?"none":"";
+  $("wi").parentElement.style.display=locked?"none":"";
+  $("cnt").style.display=locked?"none":"";
+  $("rq").style.display=locked?"none":"";
+  $("ok").style.display=locked?"none":"";
+  $("dpass").style.display=locked?"none":"";
+  $("wi").value="";
+  player=S.turn;
+  $("clr").style.display=(d&&!home&&!S.over)?"":"none";
+  resetDpass();
+  poolEmpty=false;
+  if(rollIv){clearInterval(rollIv);rollIv=null}rolling=false;
+  const wantRoll=!locked&&!d&&S.gmode==="random";
+  $("rollbox").style.display=wantRoll?"":"none";
+  $("dbig").textContent=S.cur||"\u2013";
+  refresh();
+  if(locked)$("msg").textContent="";
+  $("ov").classList.add("show");
+  if(wantRoll&&!S.cur)roll(false);
+  setTimeout(()=>{if(!locked)$("wi").focus()},50);
+}
+const close=()=>{$("ov").classList.remove("show");if(rollIv){clearInterval(rollIv);rollIv=null}rolling=false;tick()};
+$("wi").addEventListener("input",refresh);
+$("cx").onclick=close;
+$("ov").onclick=e=>{if(e.target.id==="ov")close()};
+$("clr").onclick=()=>{const o=S.board[sel];if(o&&o.w)S.used=S.used.filter(x=>x!==o.w);if(o&&o.l&&S.use[o.l])S.use[o.l]--;delete S.board[sel];save();render();close()};
+$("ok").onclick=()=>{
+  if(rolling||problem()||!$("wi").value.trim())return;
+  const w=$("wi").value.trim().toUpperCase();
+  pushHist();
+  const old=S.board[sel],target=sel,team=player;
+  S.board[sel]={p:team,w,l:w[0],n:scoreOf(w),len:w.length};
+  S.used.push(w);
+  S.use[w[0]]=(S.use[w[0]]||0)+1;S.free=false;
+  save();render();close();
+  playTake(target,old,team);
+  endTurn();
+};
+document.addEventListener("keydown",e=>{if(!$("ov").classList.contains("show"))return;if(e.key==="Escape")close();if(e.key==="Enter"&&!$("ok").disabled)$("ok").click()});
+document.querySelectorAll("#lang button").forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;save();render()});
+let resetT=null;
+$("reset").onclick=()=>{
+  const bt=$("reset");
+  if(!resetT){bt.textContent="Tap again to confirm reset";resetT=setTimeout(()=>{resetT=null;bt.textContent="Reset board"},4000);return}
+  clearTimeout(resetT);resetT=null;bt.textContent="Reset board";
+  resetGame();closeSet();
+};
+function syncSettings(){
+  document.querySelectorAll("#theme button").forEach(b=>b.classList.toggle("on",b.dataset.t===S.theme));
+  document.querySelectorAll("#btype button").forEach(b=>b.classList.toggle("on",b.dataset.t===S.bonus.type));
+  const {ok,bad}=parseBonus(S.bonus.text);
+  let t=ok.length?ok.length+" bonus word"+(ok.length===1?"":"s")+". Example: "+ok[0]+" ("+ok[0].length+" letters) scores "+scoreOf(ok[0])+" points.":"No bonus words yet.";
+  if(bad.length)t+=" Ignored (letters A–Z only): "+bad.join(", ")+".";
+  $("bnote").textContent=t;
+}
+function openSet(){$("bw").value=S.bonus.text;$("bx").value=S.bonus.x;$("tsec").value=S.tsec;$("rrmax").value=S.rrMax;$("endr").value=S.end.rounds;syncSettings();syncMode();$("setov").classList.add("show")}
+function closeSet(){$("setov").classList.remove("show")}
+$("setbtn").onclick=openSet;
+$("setdone").onclick=closeSet;
+$("setov").onclick=e=>{if(e.target.id==="setov")closeSet()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("setov").classList.contains("show"))closeSet()});
+document.querySelectorAll("#theme button").forEach(b=>b.onclick=()=>{S.theme=b.dataset.t;save();applyTheme();syncSettings()});
+document.querySelectorAll("#btype button").forEach(b=>b.onclick=()=>{S.bonus.type=b.dataset.t;save();syncSettings()});
+$("bx").addEventListener("input",()=>{const v=parseFloat($("bx").value);if(v>=1&&v<=99&&(v*2)%1===0){S.bonus.x=v;save();syncSettings()}});
+$("bw").addEventListener("input",()=>{S.bonus.text=$("bw").value;save();syncSettings()});
+const LET="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+let rolling=false;
+function reqInfo(){
+  if(S.gmode==="shiri"){
+    if(S.free)return {l:null,note:"Free choice: any letter"};
+    const w=S.used[S.used.length-1];
+    if(!w)return {l:null,note:"First word: any letter"};
+    let i=w.length-1;while(i>=0&&S.bl.includes(w[i]))i--;
+    if(i<0)return {l:null,note:"Free choice: any letter"};
+    const sk=w.length-1-i;
+    return {l:w[i],note:"after "+w+(sk?" ("+w.slice(i+1)+" is blacklisted)":"")};
+  }
+  return {l:S.cur||null,note:""};
+}
+function pickLetter(){
+  const pool=LET.filter(l=>!S.off.includes(l));
+  if(!pool.length)return null;
+  const cand=(pool.length>1&&S.cur)?pool.filter(l=>l!==S.cur):pool;
+  const w=cand.map(l=>1/(1+(S.use[l]||0)));
+  let t=Math.random()*w.reduce((a,c)=>a+c,0);
+  for(let i=0;i<cand.length;i++){t-=w[i];if(t<=0)return cand[i]}
+  return cand[cand.length-1];
+}
+let rollIv=null,poolEmpty=false;
+const other=t=>t==="red"?"blue":"red";
+const rrLeft=t=>Math.max(0,S.rrMax-(S.rrUsed[t]||0));
+function pickFirst(){return S.first==="blue"?"blue":S.first==="random"?(Math.random()<.5?"red":"blue"):"red"}
+function roll(paid){
+  if(rolling)return;
+  const p=pickLetter();
+  poolEmpty=!p;
+  if(!p){if(!paid){S.cur=null;S.rollAt=0}$("dbig").textContent=S.cur||"–";tick();refresh();return}
+  if(paid)S.rrUsed[S.turn]=(S.rrUsed[S.turn]||0)+1;
+  const pool=LET.filter(l=>!S.off.includes(l));
+  rolling=true;let n=0;S.cur=p;S.rollAt=Date.now();save();tick();refresh();renderTurn();
+  rollIv=setInterval(()=>{
+    $("dbig").textContent=pool[Math.floor(Math.random()*pool.length)];
+    if(++n>=9){clearInterval(rollIv);rollIv=null;rolling=false;$("dbig").textContent=p;refresh();renderTurn()}
+  },60);
+}
+const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function renderScore(){
+  const t=tally();
+  const dice='<svg class="die" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.6"/><circle cx="15.5" cy="8.5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="8.5" cy="15.5" r="1.6"/><circle cx="15.5" cy="15.5" r="1.6"/></svg>';
+  ["red","blue"].forEach(k=>{
+    const a=t[k][0],p=t[k][1];
+    let h=TEAM[k]+": "+a+(a===1?" area":" areas")+" \u00b7 "+p+(p===1?" pt":" pts");
+    if(S.gmode==="random")h+=' \u00b7 <span class="rr" title="Re-rolls left" aria-label="Re-rolls left">'+dice+" "+rrLeft(k)+"</span>";
+    $(k==="red"?"sr":"sb").innerHTML=h;
+  });
+}
+function tick(){
+  let txt="",pct="0%",up=false;
+  if(S.gmode==="random"&&S.cur&&S.rollAt&&!S.over){
+    const left=S.tsec-(Date.now()-S.rollAt)/1000;
+    txt=left>0?fmt(left):"Time’s up!";pct=Math.max(0,Math.min(100,left/S.tsec*100))+"%";up=left<=0;
+  }
+  $("dtm").textContent=txt;$("dbar").style.width=pct;$("rollbox").classList.toggle("up",up);
+}
+function tally(){const t={red:[0,0],blue:[0,0]};for(const k in S.board){const d=S.board[k];t[d.p][0]++;t[d.p][1]+=d.n||0}return t}
+function winner(){
+  const t=tally(),a=S.win==="points"?1:0,c=1-a;
+  const diff=t.red[a]-t.blue[a]||t.red[c]-t.blue[c];
+  return diff>0?"red":diff<0?"blue":null;
+}
+function renderTurn(){
+  const sh=S.gmode==="shiri",ri=reqInfo(),over=S.over;
+  const t=$("turn");
+  t.classList.toggle("red",!over&&S.turn==="red");t.classList.toggle("blue",!over&&S.turn==="blue");
+  const pill=$("tpill");
+  pill.textContent=over?"Game over":"Round "+(Math.floor(S.turns/2)+1)+(S.end.mode==="rounds"?" of "+S.end.rounds:"")+"";
+  pill.className="tpill";
+  t.style.display=(sh||over)?"":"none";
+  $("trow").style.display=sh?"":"none";
+  $("big").textContent=ri.l||"\u2013";
+  $("tnote").style.display=sh||over?"":"none";
+  $("tnote").textContent=over?"The game has ended.":(ri.l?"Next word starts with "+ri.l+" \u00b7 "+ri.note:ri.note);
+  $("pass").style.display=over?"none":"";
+  $("swap").style.display=over?"none":"";
+  $("roll").style.display=(sh&&ri.l&&!over)?"":"none";
+  $("res").style.display=over?"":"none";
+  $("undo").disabled=!S.hist.length;
+  renderScore();
+  $("sr").classList.toggle("act",!over&&S.turn==="red");$("sr").classList.toggle("dim",!over&&S.turn!=="red");
+  $("sb").classList.toggle("act",!over&&S.turn==="blue");$("sb").classList.toggle("dim",!over&&S.turn!=="blue");
+  tick();
+}
+function flip(){if(S.anim===false)return;const t=$("turn");t.classList.remove("flip");void t.offsetWidth;t.classList.add("flip")}
+function pushHist(){
+  S.hist.push(JSON.stringify({board:S.board,used:S.used,use:S.use,free:S.free,turn:S.turn,turns:S.turns,rrUsed:S.rrUsed,passes:S.passes,over:S.over,overWhy:S.overWhy||null,cur:S.cur,rollAt:S.rollAt}));
+  if(S.hist.length>40)S.hist.shift();
+}
+function undo(){
+  if(!S.hist.length)return;
+  Object.assign(S,JSON.parse(S.hist.pop()));
+  $("goov").classList.remove("show");
+  save();render();
+}
+function swapTurn(){if(S.over)return;pushHist();S.turn=other(S.turn);S.cur=null;S.rollAt=0;save();renderTurn();flip()}
+function checkEnd(){
+  if(S.over)return;
+  const e=S.end;
+  if(e.mode==="rounds"&&S.turns>=2*e.rounds){S.over=true;S.overWhy="rounds"}
+  else if(e.mode==="board"&&S.turns%2===0&&Object.keys(S.board).length>=P.length){S.over=true;S.overWhy="board"}
+  if(S.over)showGameOver(true);
+}
+function endTurn(){
+  S.turns++;S.turn=other(S.turn);S.cur=null;S.rollAt=0;
+  checkEnd();save();renderTurn();flip();
+}
+function passTurn(){
+  if(S.over)return;
+  pushHist();
+  const who=S.turn;S.passes[who]++;
+  endTurn();
+  if(S.anim!==false)showBannerText(TEAM[who]+" passes","No points this round"+(S.over?"":". "+TEAM[S.turn]+"’s turn."),who);
+}
+function showGameOver(delayed){
+  const w=winner(),t=tally();
+  $("goh").textContent=w?TEAM[w]+" wins!":"It’s a draw!";
+  const why=S.overWhy==="rounds"?"Round limit reached":S.overWhy==="board"?"The board is full":"Ended by the game master";
+  $("gos").textContent=why+" · "+(S.win==="points"?"decided by points, then areas":"decided by areas, then points");
+  $("gob").innerHTML=["red","blue"].map(k=>'<div class="gr '+k+'"><b>'+TEAM[k]+'</b> · '+t[k][0]+(t[k][0]===1?" area":" areas")+' · '+t[k][1]+(t[k][1]===1?" pt":" pts")+' · '+S.passes[k]+(S.passes[k]===1?" pass":" passes")+'</div>').join("");
+  const go=()=>{if(S.over)$("goov").classList.add("show")};
+  (S.anim===false||!delayed)?go():setTimeout(go,1500);
+}
+function resetGame(){
+  S.board={};S.used=[];S.use={};S.gen={};S.cur=null;S.rollAt=0;S.free=false;
+  S.turns=0;S.over=false;S.overWhy=null;S.hist=[];S.rrUsed={red:0,blue:0};S.passes={red:0,blue:0};S.turn=pickFirst();
+  ensureHome();save();render();
+}
+function twoTap(btn,label,confirmLabel,action,icon){
+  let t=null;
+  const reset=()=>{clearTimeout(t);t=null;if(icon){btn.classList.remove("armed");btn.title=label}else btn.textContent=label};
+  btn.onclick=()=>{
+    if(!t){if(icon){btn.classList.add("armed");btn.title=confirmLabel}else btn.textContent=confirmLabel;t=setTimeout(reset,3500);return}
+    reset();action();
+  };
+  return reset;
+}
+const resetDpass=twoTap($("dpass"),"Pass turn","Tap again to pass",()=>{close();passTurn()});
+twoTap($("pass"),"Pass turn","Tap again to pass",passTurn,true);
+twoTap($("endnow"),"End game now","Tap again to end the game",()=>{if(S.over)return;pushHist();S.over=true;S.overWhy="manual";save();closeSet();renderTurn();showGameOver(true)});
+$("undo").onclick=undo;
+$("swap").onclick=swapTurn;
+$("res").onclick=()=>showGameOver(false);
+$("gov").onclick=()=>$("goov").classList.remove("show");
+$("gokeep").onclick=()=>{S.end.mode="unlimited";S.over=false;save();$("goov").classList.remove("show");renderTurn();syncMode()};
+$("gonew").onclick=()=>{$("goov").classList.remove("show");resetGame()};
+$("roll").onclick=()=>{S.free=true;save();renderTurn()};
+$("droll").onclick=()=>{if(rolling||rrLeft(S.turn)<=0)return;roll(true)};
+setInterval(tick,250);
+const gridHtml=LET.map(l=>'<button data-l="'+l+'">'+l+'</button>').join("");
+$("pool").innerHTML=gridHtml;$("blk").innerHTML=gridHtml;
+function syncMode(){
+  document.querySelectorAll("#first button").forEach(bn=>bn.classList.toggle("on",bn.dataset.f===S.first));
+  document.querySelectorAll("#endm button").forEach(bn=>bn.classList.toggle("on",bn.dataset.e===S.end.mode));
+  document.querySelectorAll("#winb button").forEach(bn=>bn.classList.toggle("on",bn.dataset.w===S.win));
+  $("endrw").style.display=S.end.mode==="rounds"?"":"none";
+  document.querySelectorAll("#anim button").forEach(bn=>bn.classList.toggle("on",bn.dataset.a===(S.anim===false?"off":"on")));
+  document.querySelectorAll("#gmode button").forEach(b=>b.classList.toggle("on",b.dataset.g===S.gmode));
+  $("rset").style.display=S.gmode==="random"?"":"none";
+  $("sset").style.display=S.gmode==="shiri"?"":"none";
+  document.querySelectorAll("#pool button").forEach(b=>b.classList.toggle("on",!S.off.includes(b.dataset.l)));
+  document.querySelectorAll("#blk button").forEach(b=>b.classList.toggle("on",S.bl.includes(b.dataset.l)));
+}
+document.querySelectorAll("#gmode button").forEach(b=>b.onclick=()=>{S.gmode=b.dataset.g;save();syncMode();renderTurn()});
+$("pool").onclick=e=>{const b=e.target.closest("button[data-l]");if(!b)return;const l=b.dataset.l;S.off=S.off.includes(l)?S.off.filter(x=>x!==l):S.off.concat(l);save();syncMode()};
+$("poolall").onclick=()=>{S.off=[];save();syncMode()};
+$("blk").onclick=e=>{const b=e.target.closest("button[data-l]");if(!b)return;const l=b.dataset.l;S.bl=S.bl.includes(l)?S.bl.filter(x=>x!==l):S.bl.concat(l);save();syncMode();renderTurn()};
+$("tsec").addEventListener("input",()=>{const v=parseInt($("tsec").value,10);if(v>=5&&v<=600){S.tsec=v;save();tick()}});
+const reduced=()=>typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function sweepOrder(i,team){
+  const p=P[i],cells=p.cells,set=new Set(cells.map(c=>c[0]+","+c[1]));
+  let best=null,bd=1e9;
+  [...p.nb].filter(j=>j!==i&&S.board[j]&&S.board[j].p===team).forEach(j=>P[j].cells.forEach(([x2,y2])=>cells.forEach(([x1,y1])=>{const q=(x1-x2)**2+(y1-y2)**2;if(q<bd){bd=q;best=[x1,y1]}})));
+  if(!best)best=cells[Math.floor(cells.length/2)];
+  const dist=new Map([[best[0]+","+best[1],0]]),q=[best];let max=0;
+  while(q.length){const [x,y]=q.shift(),dd=dist.get(x+","+y);[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const k=(x+dx)+","+(y+dy);if(set.has(k)&&!dist.has(k)){dist.set(k,dd+1);max=Math.max(max,dd+1);q.push([x+dx,y+dy])}})}
+  return {dist,max};
+}
+let bannerT=null,sweepT=null;
+function showBannerText(head,sub,team){
+  const el=$("banner");
+  el.className="banner "+team;
+  $("bh").textContent=head;
+  $("bw").textContent=sub;
+  void el.offsetWidth;
+  el.classList.add("show");
+  clearTimeout(bannerT);bannerT=setTimeout(()=>el.classList.remove("show"),3500);
+}
+function showBanner(i,old,team){
+  const p=P[i],nw=S.board[i];
+  const nm=S.mode==="en"?p[0]:S.mode==="jp"?p[1]:p[1]+" "+p[0];
+  const a=old.w?old.w+" ("+old.n+")":old.l+old.n,c=nw.w+" ("+nw.n+")";
+  showBannerText(TEAM[team]+" steals "+nm+"!",a+"  →  "+c,team);
+}
+function playTake(i,old,team){
+  if(S.anim===false)return;
+  const steal=!!old&&old.p!==team,own=!!old&&old.p===team;
+  if(steal)showBanner(i,old,team);
+  if(reduced()||!$("map").insertAdjacentHTML)return;
+  const p=P[i];let html,total;
+  if(own){
+    html='<g class="pf sw fl" id="swp">'+p.cells.map(([x,y])=>'<rect class="c" x="'+x*U+'" y="'+y*U+'" width="'+U+'" height="'+U+'"/>').join("")+'</g>';total=600;
+  }else{
+    const {dist,max}=sweepOrder(i,team);
+    const step=Math.min(70,650/Math.max(1,max));
+    const sq=p.cells.map(([x,y])=>{const d=dist.has(x+","+y)?dist.get(x+","+y):max;return '<rect class="c" x="'+x*U+'" y="'+y*U+'" width="'+U+'" height="'+U+'" style="animation-delay:'+Math.round(d*step)+'ms"/>'}).join("");
+    html='<g class="pf sw'+(old?" "+old.p:"")+'" id="swp">'+sq+'<g class="swt" style="animation-delay:'+Math.round(max*step*0.4)+'ms">'+labelSvg(p,old)+'</g></g>';
+    total=max*step+320;
+  }
+  $("map").insertAdjacentHTML("beforeend",html);
+  clearTimeout(sweepT);
+  sweepT=setTimeout(()=>{const el=$("swp");if(el&&el.remove)el.remove()},total+50);
+}
+document.querySelectorAll("#anim button").forEach(bn=>bn.onclick=()=>{S.anim=bn.dataset.a==="on";save();syncMode()});
+document.querySelectorAll("#first button").forEach(bn=>bn.onclick=()=>{S.first=bn.dataset.f;if(S.turns===0&&!S.hist.length)S.turn=pickFirst();save();syncMode();renderTurn()});
+document.querySelectorAll("#endm button").forEach(bn=>bn.onclick=()=>{S.end.mode=bn.dataset.e;save();syncMode();renderTurn()});
+document.querySelectorAll("#winb button").forEach(bn=>bn.onclick=()=>{S.win=bn.dataset.w;save();syncMode()});
+$("rrmax").addEventListener("input",()=>{const v=parseInt($("rrmax").value,10);if(v>=0&&v<=99){S.rrMax=v;save();renderTurn();refresh()}});
+$("endr").addEventListener("input",()=>{const v=parseInt($("endr").value,10);if(v>=1&&v<=99){S.end.rounds=v;save();renderTurn()}});
+applyTheme();
+const fsb=$("fs");
+if(!document.fullscreenEnabled)fsb.style.display="none";
+fsb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(()=>{fsb.style.display="none"})}catch(e){fsb.style.display="none"}};
+document.addEventListener("fullscreenchange",()=>{const on=!!document.fullscreenElement;fsb.classList.toggle("on",on);fsb.title=on?"Exit full screen":"Full screen";fsb.setAttribute("aria-label",fsb.title)});
+ensureHome();save();render();
+</script>
+</body>
+</html>
