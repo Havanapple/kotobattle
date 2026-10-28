@@ -690,8 +690,8 @@ $("rrmax").addEventListener("input",()=>{const v=parseInt($("rrmax").value,10);i
 $("endr").addEventListener("input",()=>{const v=parseInt($("endr").value,10);if(v>=1&&v<=99){S.end.rounds=v;save();renderTurn()}});
 applyTheme();
 const fsb=$("fs");
-if(!document.fullscreenEnabled)fsb.style.display="none";
-fsb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(()=>{fsb.style.display="none"})}catch(e){fsb.style.display="none"}};
+const noFs=()=>toast("Full screen is blocked here. Open the file directly in your browser, or press F11.");
+fsb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(noFs)}catch(e){noFs()}};
 document.addEventListener("fullscreenchange",()=>{const on=!!document.fullscreenElement;fsb.classList.toggle("on",on);fsb.title=on?"Exit full screen":"Full screen";fsb.setAttribute("aria-label",fsb.title)});
 ensureHome();save();render();
 </script>
