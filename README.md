@@ -7,6 +7,7 @@ A two-team classroom word game played on a blocky map of Japan's 47 prefectures.
 - Red starts in Okinawa and Blue starts in Hokkaido. These home bases can't be taken.
 - On your turn, click a prefecture and type a word. The app counts the letters and shows the letter and score on the map (for example `A7`).
 - You can only take a prefecture that touches one you own, or is across a dashed crossing from one (for example Aomori to Hokkaido, Yamaguchi to Fukuoka, Hiroshima or Oita to Ehime, Hyogo or Wakayama to Tokushima, Kagoshima to Okinawa).
+- Clicking a prefecture you can't take yet does nothing except show a short message, and no letter is rolled.
 - A new area needs a word that starts with the current letter.
 - To steal a prefecture, use a word that starts with that area's own letter and scores more points than the current word. Ties don't steal.
 - Each word can only be used once per game.
@@ -36,8 +37,24 @@ A two-team classroom word game played on a blocky map of Japan's 47 prefectures.
 
 Open `index.html` in a browser. Nothing else is needed.
 
+## Put it online with GitHub Pages
+
+1. Sign in to GitHub and create a new repository, for example `kotobattle`. Make it **Public** (Pages on private repositories needs a paid plan).
+2. On the repository page choose **Add file → Upload files**, drag in `index.html` (and `README.md` if you like), then click **Commit changes**.
+3. Go to **Settings → Pages**.
+4. Under **Build and deployment**, set **Source** to **Deploy from a branch**. Choose branch **main** and folder **/ (root)**, then click **Save**.
+5. Wait a minute or two and refresh the Pages settings. The address appears there, in the form `https://YOUR-USERNAME.github.io/kotobattle/`.
+
+To update the game later, upload a new `index.html` with the same name (Add file → Upload files, then commit). After the update goes live, do a hard refresh in the browser (Ctrl+Shift+R, or Cmd+Shift+R on a Mac) to be sure you're seeing the new version.
+
 ## Saving
 
 The game saves automatically in the browser's local storage, so it stays on one device and browser and is tied to the web address. A game started on one address (for example your GitHub Pages link) won't appear on another. Clearing site data clears the game.
 
+## Rebuilding from source
 
+The game is generated from `build.py` and `P.js` (the map). See `NOTES.md`. In short:
+
+    python3 build.py
+
+writes a fresh `index.html` next to the script.
