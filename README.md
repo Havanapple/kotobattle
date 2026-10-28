@@ -36,24 +36,8 @@ A two-team classroom word game played on a blocky map of Japan's 47 prefectures.
 
 Open `index.html` in a browser. Nothing else is needed.
 
-## Put it online with GitHub Pages
-
-1. Sign in to GitHub and create a new repository, for example `kotobattle`. Make it **Public** (Pages on private repositories needs a paid plan).
-2. On the repository page choose **Add file → Upload files**, drag in `index.html` (and `README.md` if you like), then click **Commit changes**.
-3. Go to **Settings → Pages**.
-4. Under **Build and deployment**, set **Source** to **Deploy from a branch**. Choose branch **main** and folder **/ (root)**, then click **Save**.
-5. Wait a minute or two and refresh the Pages settings. The address appears there, in the form `https://YOUR-USERNAME.github.io/kotobattle/`.
-
-To update the game later, upload a new `index.html` with the same name (Add file → Upload files, then commit). After the update goes live, do a hard refresh in the browser (Ctrl+Shift+R, or Cmd+Shift+R on a Mac) to be sure you're seeing the new version.
-
 ## Saving
 
 The game saves automatically in the browser's local storage, so it stays on one device and browser and is tied to the web address. A game started on one address (for example your GitHub Pages link) won't appear on another. Clearing site data clears the game.
 
-## Rebuilding from source
 
-The game is generated from `build.py` and `P.js` (the map). See `NOTES.md`. In short:
-
-    python3 build.py
-
-writes a fresh `index.html` next to the script.
